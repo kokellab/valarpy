@@ -26,7 +26,7 @@ Update your config file, replacing `ssh_host: "valinor.ucsf.edu"` with `local_bi
 You can of course alias in your `~/.zshrc`. You can add a `valinor-tunnel` alias by running:
 ```bash
 echo "export valinor_tunnel_port=53419" >> ~/.zshrc
-echo "alias valinor-tunnel='ssh -L $valinor_tunnel_port:localhost:3306 valinor.ucsf.edu'" >> ~/.zshrc
+echo "alias valinor-tunnel='ssh -L ${valinor_tunnel_port}:localhost:3306 valinor.ucsf.edu'" >> ~/.zshrc
 ```
 
 This mode will allow you to use the same tunnel with other languages and to connect to Valar natively.
