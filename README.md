@@ -1,6 +1,7 @@
 # [valarpy](https://github.com/kokellab/valarpy)
 Python code to talk to the Kokel Lab database, [Valar](https://github.com/kokellab/valar). Import this into other projects.
-Remember, valar is served by valinor, the webserver and home of valinor. 
+
+ (Valinor is the webserver and home of valar.) 
 
 There is more documentation available in the Valar readme, including an [Entity–Relationship Diagram](https://github.com/kokellab/valar/blob/alttables/docs/erd/valar\_schema.png), where the lines are [foreign keys](https://en.wikipedia.org/wiki/Foreign_key) whose targets are denoted as forks.
 
