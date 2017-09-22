@@ -7,7 +7,7 @@ Python code to talk to the Kokel Lab database, [Valar](https://github.com/kokell
 
 There is more documentation available in the Valar readme, including an [Entity–Relationship Diagram](https://github.com/kokellab/valar/blob/alttables/docs/erd/valar\_schema.png), where the lines are [foreign keys](https://en.wikipedia.org/wiki/Foreign_key) whose targets are denoted as forks.
 
-### configuration
+### Connect to valinor
 
 An example configuration file is at [config/example_config.json](config/example_config.json). 
 I recommend downloading it to `$HOME/valarpy_configs/read_only.json`
@@ -17,7 +17,7 @@ In addition, you’ll also need to set up SSH keys for Valinor.
 Valarpy connects to Valar through an SSH tunnel; the database is not accessible remotely.
 There are two modes of connection: Valarpy can either use an existing SSH tunnel or create its own.
 
-##### existing tunnel
+##### set up new tunnel
 
 Replacing _53419_ with a number of your choosing, create the tunnel using:
 ```bash
