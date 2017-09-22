@@ -1,7 +1,9 @@
 # [valarpy](https://github.com/kokellab/valarpy)
-Python code to talk to the Kokel Lab database, [Valar](https://github.com/kokellab/valar). Import this into other projects.
+Python code to talk to the Kokel Lab database, [Valar](https://github.com/kokellab/valar). (Valinor is the webserver and home of valar.) 
 
- (Valinor is the webserver and home of valar.) 
+### Set up your ssh key
+[How To Set Up SSH Keys | DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2)
+
 
 There is more documentation available in the Valar readme, including an [Entity–Relationship Diagram](https://github.com/kokellab/valar/blob/alttables/docs/erd/valar\_schema.png), where the lines are [foreign keys](https://en.wikipedia.org/wiki/Foreign_key) whose targets are denoted as forks.
 
