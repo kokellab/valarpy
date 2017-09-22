@@ -25,8 +25,7 @@ The port can't be _anything_. It needs to be between 1025 and 65535, and I recom
 create the tunnel using:
 ```bash
 ssh -L 53419:localhost:3306 valinor.ucsf.edu
-```
-The port can't be _anything_. It needs to be between 1025 and 65535, and I recommend 49152–65535.
+``
 
 Note that after running it your shell is now on Valinor. You will need to leave this tunnel open while connecting to Valar.
 Update your config file, replacing `ssh_host: "valinor.ucsf.edu"` with `local_bind_port: 53419`.
