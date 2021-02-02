@@ -130,7 +130,6 @@ branches:
         strict: true
         contexts:
           - "build (3.9)"
-          - "markdown-link-check"
       enforce_admins: false
       required_linear_history: true
       restrictions: null
