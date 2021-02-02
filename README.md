@@ -1,12 +1,17 @@
 # Valarpy
 
-[![Version status](https://img.shields.io/pypi/status/valarpy)](https://pypi.org/project/valarpy/)
+[![Version status](https://img.shields.io/pypi/status/valarpy?label=status)](https://pypi.org/project/valarpy)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/valarpy)](https://pypi.org/project/valarpy/)
-[![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/dmyersturnbull/valarpy?include_prereleases&label=GitHub)](https://github.com/dmyersturnbull/valarpy/releases)
-[![Latest version on PyPi](https://badge.fury.io/py/valarpy.svg)](https://pypi.org/project/valarpy/)
-[![Documentation status](https://readthedocs.org/projects/valarpy/badge/?version=latest&style=flat-square)](https://valarpy.readthedocs.io/en/stable/)
-[![Build & test](https://github.com/dmyersturnbull/valarpy/workflows/Build%20&%20test/badge.svg)](https://github.com/dmyersturnbull/valarpy/actions)
+[![Python version compatibility](https://img.shields.io/pypi/pyversions/valarpy?label=Python)](https://pypi.org/project/valarpy)
+[![Version on Docker Hub](https://img.shields.io/docker/v/dmyersturnbull/valarpy?color=green&label=Docker%20Hub)](https://hub.docker.com/repository/docker/dmyersturnbull/valarpy)
+[![Version on GitHub](https://img.shields.io/github/v/release/dmyersturnbull/valarpy?include_prereleases&label=GitHub)](https://github.com/dmyersturnbull/valarpy/releases)
+[![Version on PyPi](https://img.shields.io/pypi/v/valarpy?label=PyPi)](https://pypi.org/project/valarpy)
+[![Version on Conda-Forge](https://img.shields.io/conda/vn/conda-forge/valarpy?label=Conda-Forge)](https://anaconda.org/conda-forge/valarpy)  
+[![Build (Actions)](https://img.shields.io/github/workflow/status/dmyersturnbull/valarpy/Build%20&%20test?label=Tests)](https://github.com/dmyersturnbull/valarpy/actions)
+[![Documentation status](https://readthedocs.org/projects/valarpy/badge)](https://valarpy.readthedocs.io/en/stable/)
+[![Coverage (coveralls)](https://coveralls.io/repos/github/dmyersturnbull/valarpy/badge.svg?branch=main&service=github)](https://coveralls.io/github/dmyersturnbull/valarpy?branch=main)
+[![Maintainability (Code Climate)](https://api.codeclimate.com/v1/badges/d09d2fe2feec87da1816/maintainability)](https://codeclimate.com/github/dmyersturnbull/valarpy/maintainability)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/dmyersturnbull/valarpy/badges/quality-score.png?b=main)](https://scrutinizer-ci.com/g/dmyersturnbull/valarpy/?branch=main)
 
 Python code to talk to [Valar](https://github.com/dmyersturnbull/valar).
 There is more documentation available in the Valar readme.
@@ -24,11 +29,11 @@ An example connection config file:
 
 ```json
 {
-    "port": 3306,
-    "user": "kaletest",
-    "password": "kale123",
-    "database": "valartest",
-    "host": "127.0.0.1"
+  "port": 3306,
+  "user": "kaletest",
+  "password": "kale123",
+  "database": "valartest",
+  "host": "127.0.0.1"
 }
 ```
 

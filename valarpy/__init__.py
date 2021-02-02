@@ -9,26 +9,24 @@ from importlib.metadata import metadata as __load
 from pathlib import Path
 from typing import Generator, List, Mapping, Union
 
-pkg_name = Path(__file__).absolute().parent.name
-logger = logging.getLogger(pkg_name)
-__metadata = None
+pkg = Path(__file__).absolute().parent.name
+logger = logging.getLogger(pkg)
+_metadata = None
 try:
-    __metadata = __load(pkg_name)
+    _metadata = __load(Path(__file__).absolute().parent.name)
     __status__ = "Development"
-    __copyright__ = "Copyright 2016–2020"
-    __date__ = "2020-08-14"
-    __uri__ = __metadata["home-page"]
-    __title__ = __metadata["name"]
-    __summary__ = __metadata["summary"]
-    __license__ = __metadata["license"]
-    __version__ = __metadata["version"]
-    __author__ = __metadata["author"]
-    __maintainer__ = __metadata["maintainer"]
-    __contact__ = __metadata["maintainer"]
+    __copyright__ = "Copyright 2016–2021"
+    __date__ = "2020-12-29"
+    __uri__ = _metadata["home-page"]
+    __title__ = _metadata["name"]
+    __summary__ = _metadata["summary"]
+    __license__ = _metadata["license"]
+    __version__ = _metadata["version"]
+    __author__ = _metadata["author"]
+    __maintainer__ = _metadata["maintainer"]
+    __contact__ = _metadata["maintainer"]
 except PackageNotFoundError:  # pragma: no cover
-    logger.error(
-        f"Could not load package __metadata for {pkg_name}. Is it installed?"
-    )
+    logger.error(f"Could not load package metadata for {pkg}. Is it installed?")
 
 
 class Valar:
@@ -40,6 +38,7 @@ class Valar:
         ] = None,
     ):
         from valarpy.connection import Valar
+
         return Valar(config)
 
 
@@ -60,6 +59,7 @@ def opened(
         The ``model`` module
     """
     from valarpy.connection import Valar
+
     with Valar(config):
         from valarpy import model
 
@@ -80,8 +80,9 @@ def valarpy_info() -> Generator[str, None, None]:
     """
     from valarpy.connection import Valar
     import peewee
-    if __metadata is not None:
-        yield "{} (v{})".format(__metadata["name"], __metadata["version"])
+
+    if _metadata is not None:
+        yield "{} (v{})".format(_metadata["name"], _metadata["version"])
     else:
         yield "Unknown project info"
     yield "Connecting..."
