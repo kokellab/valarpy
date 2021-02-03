@@ -9,11 +9,16 @@ from importlib.metadata import metadata as __load
 from pathlib import Path
 from typing import Generator, List, Mapping, Union
 
+import peewee
+
+from valarpy.connection import Valar as __Valar
+
+
 pkg = Path(__file__).absolute().parent.name
 logger = logging.getLogger(pkg)
-_metadata = None
+__metadata = None
 try:
-    _metadata = __load(Path(__file__).absolute().parent.name)
+    __metadata = __load(Path(__file__).absolute().parent.name)
     __status__ = "Development"
     __copyright__ = "Copyright 2016–2021"
     __date__ = "2020-12-29"
@@ -29,7 +34,7 @@ except PackageNotFoundError:  # pragma: no cover
     logger.error(f"Could not load package metadata for {pkg}. Is it installed?")
 
 
-class Valar:
+class Valar(__Valar):
     @classmethod
     def singleton(
         cls,
@@ -37,9 +42,24 @@ class Valar:
             None, str, Path, List[Union[str, Path, None]], Mapping[str, Union[str, int]]
         ] = None,
     ):
-        from valarpy.connection import Valar
+        z = cls(config)
+        return z
 
-        return Valar(config)
+
+get_preferred_paths = Valar.get_preferred_paths
+
+
+def new_model():
+    """
+    Shorthand for importing model.
+    You should have a connection open.
+
+    Returns:
+        The ``model`` module
+    """
+    from valarpy import model
+
+    return model
 
 
 @contextmanager
@@ -58,8 +78,6 @@ def opened(
     Returns:
         The ``model`` module
     """
-    from valarpy.connection import Valar
-
     with Valar(config):
         from valarpy import model
 
@@ -78,20 +96,17 @@ def valarpy_info() -> Generator[str, None, None]:
     Raises:
         InterfaceError: On some connection and schema mismatch errors
     """
-    from valarpy.connection import Valar
-    import peewee
-
-    if _metadata is not None:
-        yield "{} (v{})".format(_metadata["name"], _metadata["version"])
+    if __metadata is not None:
+        yield "{} (v{})".format(__metadata["name"], __metadata["version"])
     else:
         yield "Unknown project info"
     yield "Connecting..."
-    with opened(Valar.get_preferred_paths()) as m:
+    with opened(get_preferred_paths()) as m:
         yield "Connected."
         yield ""
         yield "Table                       N Rows"
         yield "----------------------------------"
-        for sub in m.IBaseModel.__subclasses__():
+        for sub in m.BaseModel.__subclasses__():
             count = sub.select(peewee.fn.COUNT(sub.id).alias("count")).first()
             yield f"{sub.__name__:<25} = {count.count}"
         yield "----------------------------------"
@@ -104,4 +119,4 @@ if __name__ == "__main__":  # pragma: no cover
         print(line)
 
 
-__all__ = ["Valar", "opened", "valarpy_info"]
+__all__ = ["Valar", "new_model", "opened", "valarpy_info", "get_preferred_paths"]

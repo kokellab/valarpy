@@ -13,13 +13,13 @@ def setup():
 
 class TestMetamodel:
     def test_create(self, setup):
-        from valarpy.model import IUsers
+        from valarpy.model import Users
 
-        user = IUsers(username="hi", first_name="Hello", last_name="Hi")
+        user = Users(username="hi", first_name="Hello", last_name="Hi")
         assert user.id is None
 
     def test_get_data(self, setup):
-        from valarpy.model import IRefs
+        from valarpy.model import Refs
 
         assert Refs(id=1, name="hi").get_data() == dict(id=1, name="hi")
 

@@ -13,15 +13,15 @@ CONFIG_DATA = json.loads(CONFIG_PATH.read_text(encoding="utf8"))
 
 class TestModel:
     def test_reconnect(self):
-        with Valar.singleton(CONFIG_PATH) as valar:
-            from valarpy.model import IRefs
+        with Valar(CONFIG_PATH) as valar:
+            from valarpy.model import Refs
 
             assert list(Refs) is not None
             valar.reconnect()
             assert list(Refs) is not None
 
     def test_config_dict(self):
-        with Valar.singleton(CONFIG_DATA):
+        with Valar(CONFIG_DATA):
             from valarpy.model import Refs
 
             list(Refs.select())

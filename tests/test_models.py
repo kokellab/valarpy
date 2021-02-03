@@ -15,7 +15,7 @@ class TestModel:
     def test_all_models(self, setup):
         import valarpy.model as m
 
-        for sub in m.IBaseModel.__subclasses__():
+        for sub in m.BaseModel.__subclasses__():
             assert list(sub.select()) is not None
 
 
