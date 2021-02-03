@@ -8,7 +8,7 @@ import peewee
 from peewee import *
 
 from valarpy.definitions import *
-from valarpy.metamodel import BaseModel, EnumField
+from valarpy.metamodel import IBaseModel, EnumField
 
 
 def _blob_type_from_legacy(legacy) -> BlobType:
@@ -27,11 +27,11 @@ def _blob_type_from_legacy(legacy) -> BlobType:
         "unsigned_double": BlobType.int_udouble,
         "utf8_char": BlobType.str_utf8,
         "utf16_char": BlobType.str_utf16,
-        "other": BlobType.blob
+        "other": BlobType.blob,
     }.get(legacy, BlobType.unknown)
 
 
-class ISuppliers(Supplier, BaseModel):  # pragma: no cover
+class ISuppliers(Supplier, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     description = CharField(null=True)
     name = CharField(unique=True)
@@ -40,7 +40,7 @@ class ISuppliers(Supplier, BaseModel):  # pragma: no cover
         table_name = "suppliers"
 
 
-class IPlateTypes(PlateType, BaseModel):  # pragma: no cover
+class IPlateTypes(PlateType, IBaseModel):  # pragma: no cover
     n_columns = IntegerField()
     n_rows = IntegerField()
     name = CharField(null=True)
@@ -52,7 +52,7 @@ class IPlateTypes(PlateType, BaseModel):  # pragma: no cover
         indexes = ((("n_rows", "n_columns"), False),)
 
 
-class IUsers(User, BaseModel):  # pragma: no cover
+class IUsers(User, IBaseModel):  # pragma: no cover
     @property
     def sstring(self) -> str:
         pass
@@ -68,7 +68,7 @@ class IUsers(User, BaseModel):  # pragma: no cover
         table_name = "users"
 
 
-class IPlates(Plate, BaseModel):  # pragma: no cover
+class IPlates(Plate, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     datetime_plated = DateTimeField(index=True, null=True)
     person_plated = ForeignKeyField(column_name="person_plated_id", field="id", model=IUsers)
@@ -80,7 +80,7 @@ class IPlates(Plate, BaseModel):  # pragma: no cover
         table_name = "plates"
 
 
-class IBatteries(Battery, BaseModel):  # pragma: no cover
+class IBatteries(Battery, IBaseModel):  # pragma: no cover
     assays_sha1 = BlobField(index=True)  # auto-corrected to BlobField
     author = ForeignKeyField(column_name="author_id", field="id", model=IUsers, null=True)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
@@ -90,13 +90,13 @@ class IBatteries(Battery, BaseModel):  # pragma: no cover
     name = CharField(unique=True)
     notes = CharField(null=True)
     # these exist, but we don't need them in valarpy
-    #template = IntegerField(column_name="template_id", index=True, null=True)
+    # template = IntegerField(column_name="template_id", index=True, null=True)
 
     class Meta:
         table_name = "batteries"
 
 
-class IProjectTypes(ProjectType, BaseModel):  # pragma: no cover
+class IProjectTypes(ProjectType, IBaseModel):  # pragma: no cover
     description = TextField()
     name = CharField(unique=True)
 
@@ -104,7 +104,7 @@ class IProjectTypes(ProjectType, BaseModel):  # pragma: no cover
         table_name = "project_types"
 
 
-class IProjects(Project, BaseModel):  # pragma: no cover
+class IProjects(Project, IBaseModel):  # pragma: no cover
     active = IntegerField(constraints=[SQL("DEFAULT 1")])
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     creator = ForeignKeyField(column_name="creator_id", field="id", model=IUsers)
@@ -116,7 +116,7 @@ class IProjects(Project, BaseModel):  # pragma: no cover
         table_name = "projects"
 
 
-class IExperiments(Experiment, BaseModel):  # pragma: no cover
+class IExperiments(Experiment, IBaseModel):  # pragma: no cover
     active = IntegerField(constraints=[SQL("DEFAULT 1")])
     battery = ForeignKeyField(column_name="battery_id", field="id", model=IBatteries)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
@@ -127,18 +127,18 @@ class IExperiments(Experiment, BaseModel):  # pragma: no cover
     notes = TextField(null=True)
     project = ForeignKeyField(column_name="project_id", field="id", model=IProjects)
     # these exist, but we don't need them in valarpy
-    #template_plate = ForeignKeyField(
+    # template_plate = ForeignKeyField(
     #    column_name="template_plate_id", field="id", model=ITemplatePlates, null=True
-    #)
-    #transfer_plate = ForeignKeyField(
+    # )
+    # transfer_plate = ForeignKeyField(
     #    column_name="transfer_plate_id", field="id", model=ITransferPlates, null=True
-    #)
+    # )
 
     class Meta:
         table_name = "experiments"
 
 
-class IExperimentTags(ExperimentTag, BaseModel):  # pragma: no cover
+class IExperimentTags(ExperimentTag, IBaseModel):  # pragma: no cover
     name = CharField()
     experiment = ForeignKeyField(column_name="experiment_id", field="id", model=IExperiments)
     value = CharField()
@@ -148,7 +148,7 @@ class IExperimentTags(ExperimentTag, BaseModel):  # pragma: no cover
         indexes = ((("experiment", "name"), True),)
 
 
-class ISaurons(Sauron, BaseModel):  # pragma: no cover
+class ISaurons(Sauron, IBaseModel):  # pragma: no cover
     active = IntegerField(constraints=[SQL("DEFAULT 0")], index=True)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     name = CharField(unique=True)
@@ -165,7 +165,7 @@ class ISaurons(Sauron, BaseModel):  # pragma: no cover
         return "Sauron " + self.name
 
 
-class ISauronConfigs(SauronConfig, BaseModel):  # pragma: no cover
+class ISauronConfigs(SauronConfig, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     datetime_changed = DateTimeField()
     description = TextField()
@@ -176,7 +176,7 @@ class ISauronConfigs(SauronConfig, BaseModel):  # pragma: no cover
         indexes = ((("sauron", "datetime_changed"), True),)
 
 
-class ISubmissions(Submission, BaseModel):  # pragma: no cover
+class ISubmissions(Submission, IBaseModel):  # pragma: no cover
     acclimation_sec = IntegerField(null=True)
     continuing = ForeignKeyField(column_name="continuing_id", field="id", model="self", null=True)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
@@ -187,13 +187,15 @@ class ISubmissions(Submission, BaseModel):  # pragma: no cover
     lookup_hash = CharField(unique=True)
     notes = TextField(null=True)
     person_plated = ForeignKeyField(column_name="person_plated_id", field="id", model=IUsers)
-    user = ForeignKeyField(backref="users_user_set", column_name="user_id", field="id", model=IUsers)
+    user = ForeignKeyField(
+        backref="users_user_set", column_name="user_id", field="id", model=IUsers
+    )
 
     class Meta:
         table_name = "submissions"
 
 
-class IConfigFiles(ConfigFile, BaseModel):  # pragma: no cover
+class IConfigFiles(ConfigFile, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     text_sha1 = BlobField(index=True)  # auto-corrected to BlobField
     text = TextField(column_name="toml_text")
@@ -202,7 +204,7 @@ class IConfigFiles(ConfigFile, BaseModel):  # pragma: no cover
         table_name = "config_files"
 
 
-class IRuns(Run, BaseModel):  # pragma: no cover
+class IRuns(Run, IBaseModel):  # pragma: no cover
     acclimation_sec = IntegerField(index=True, null=True)
     config_file = ForeignKeyField(
         column_name="config_file_id", field="id", model=IConfigFiles, null=True
@@ -217,7 +219,9 @@ class IRuns(Run, BaseModel):  # pragma: no cover
     name = CharField(null=True, unique=True)
     notes = TextField(null=True)
     plate = ForeignKeyField(column_name="plate_id", field="id", model=IPlates)
-    sauron_config = ForeignKeyField(column_name="sauron_config_id", field="id", model=ISauronConfigs)
+    sauron_config = ForeignKeyField(
+        column_name="sauron_config_id", field="id", model=ISauronConfigs
+    )
     submission = ForeignKeyField(
         column_name="submission_id", field="id", model=ISubmissions, null=True, unique=True
     )
@@ -227,7 +231,7 @@ class IRuns(Run, BaseModel):  # pragma: no cover
         table_name = "runs"
 
 
-class IAssays(Assay, BaseModel):  # pragma: no cover
+class IAssays(Assay, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     description = CharField(null=True)
     frames_sha1 = BlobField(index=True)  # auto-corrected to BlobField
@@ -235,16 +239,16 @@ class IAssays(Assay, BaseModel):  # pragma: no cover
     length = IntegerField()
     name = CharField(unique=True)
     # these exist, but we don't need them in valarpy
-    #template_assay = ForeignKeyField(
+    # template_assay = ForeignKeyField(
     #    column_name="template_assay_id", field="id", model=ITemplateAssays, null=True
-    #)
+    # )
 
     class Meta:
         table_name = "assays"
         indexes = ((("name", "frames_sha1"), True),)
 
 
-class IControlTypes(ControlType, BaseModel):  # pragma: no cover
+class IControlTypes(ControlType, IBaseModel):  # pragma: no cover
     description = CharField()
     drug_related = IntegerField(constraints=[SQL("DEFAULT 1")], index=True)
     genetics_related = IntegerField(index=True)
@@ -255,7 +259,7 @@ class IControlTypes(ControlType, BaseModel):  # pragma: no cover
         table_name = "control_types"
 
 
-class IGeneticVariants(GeneticVariant, BaseModel):  # pragma: no cover
+class IGeneticVariants(GeneticVariant, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     creator = ForeignKeyField(column_name="creator_id", field="id", model=IUsers)
     date_created = DateField(null=True)
@@ -278,7 +282,7 @@ class IGeneticVariants(GeneticVariant, BaseModel):  # pragma: no cover
         table_name = "genetic_variants"
 
 
-class IWells(Well, BaseModel):  # pragma: no cover
+class IWells(Well, IBaseModel):  # pragma: no cover
     age = IntegerField(null=True)
     control_type = ForeignKeyField(
         column_name="control_type_id", field="id", model=IControlTypes, null=True
@@ -297,7 +301,7 @@ class IWells(Well, BaseModel):  # pragma: no cover
         indexes = ((("run", "well_index"), True),)
 
 
-class IAnnotations(RunAnnotation, BaseModel):  # pragma: no cover
+class IAnnotations(RunAnnotation, IBaseModel):  # pragma: no cover
     annotator = ForeignKeyField(column_name="annotator_id", field="id", model=IUsers)
     assay = ForeignKeyField(column_name="assay_id", field="id", model=IAssays, null=True)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
@@ -328,7 +332,7 @@ class IAnnotations(RunAnnotation, BaseModel):  # pragma: no cover
         table_name = "annotations"
 
 
-class IAssayPositions(AssayPosition, BaseModel):  # pragma: no cover
+class IAssayPositions(AssayPosition, IBaseModel):  # pragma: no cover
     assay = ForeignKeyField(column_name="assay_id", field="id", model=IAssays)
     battery = ForeignKeyField(column_name="battery_id", field="id", model=IBatteries)
     start = IntegerField(index=True)
@@ -338,7 +342,7 @@ class IAssayPositions(AssayPosition, BaseModel):  # pragma: no cover
         indexes = ((("battery", "assay", "start"), True),)
 
 
-class IAudioFiles(AudioFile, BaseModel):  # pragma: no cover
+class IAudioFiles(AudioFile, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     creator = ForeignKeyField(column_name="creator_id", field="id", model=IUsers, null=True)
     data = BlobField()  # auto-corrected to BlobField
@@ -351,7 +355,7 @@ class IAudioFiles(AudioFile, BaseModel):  # pragma: no cover
         table_name = "audio_files"
 
 
-class ILocations(Location, BaseModel):  # pragma: no cover
+class ILocations(Location, IBaseModel):  # pragma: no cover
     active = IntegerField(constraints=[SQL("DEFAULT 1")])
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     description = CharField(constraints=[SQL("DEFAULT ''")])
@@ -368,7 +372,7 @@ class ILocations(Location, BaseModel):  # pragma: no cover
         table_name = "locations"
 
 
-class IRefs(Ref, BaseModel):  # pragma: no cover
+class IRefs(Ref, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     datetime_downloaded = DateTimeField(null=True)
     description = CharField(null=True)
@@ -385,7 +389,7 @@ class IRefs(Ref, BaseModel):  # pragma: no cover
         table_name = "refs"
 
 
-class ICompounds(Compound, BaseModel):  # pragma: no cover
+class ICompounds(Compound, IBaseModel):  # pragma: no cover
     chembl = CharField(column_name="chembl_id", index=True, null=True)
     chemspider = IntegerField(column_name="chemspider_id", null=True)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
@@ -409,7 +413,7 @@ class ICompounds(Compound, BaseModel):  # pragma: no cover
         table_name = "compounds"
 
 
-class IBatches(Batch, BaseModel):  # pragma: no cover
+class IBatches(Batch, IBaseModel):  # pragma: no cover
     amount = CharField(null=True)
     box_number = IntegerField(index=True, null=True)
     compound = ForeignKeyField(column_name="compound_id", field="id", model=ICompounds, null=True)
@@ -440,7 +444,7 @@ class IBatches(Batch, BaseModel):  # pragma: no cover
         indexes = ((("box_number", "well_number"), True),)
 
 
-class IBatchLabels(BatchLabel, BaseModel):  # pragma: no cover
+class IBatchLabels(BatchLabel, IBaseModel):  # pragma: no cover
     batch = ForeignKeyField(column_name="batch_id", field="id", model=IBatches)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     name = CharField(index=True)
@@ -450,7 +454,7 @@ class IBatchLabels(BatchLabel, BaseModel):  # pragma: no cover
         table_name = "batch_labels"
 
 
-class ISensors(Sensor, BaseModel):  # pragma: no cover
+class ISensors(Sensor, IBaseModel):  # pragma: no cover
     _blob_type = EnumField(
         choices=(
             "assay_start",
@@ -460,7 +464,7 @@ class ISensors(Sensor, BaseModel):  # pragma: no cover
             "arbitrary",
         ),
         null=True,
-        column_name="blob_type"
+        column_name="blob_type",
     )  # auto-corrected to Enum
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     _data_type = EnumField(
@@ -480,7 +484,7 @@ class ISensors(Sensor, BaseModel):  # pragma: no cover
             "unsigned_long",
             "other",
         ),
-        column_name="blob_type"
+        column_name="blob_type",
     )  # auto-corrected to Enum
     description = CharField(null=True)
     n_between = IntegerField(null=True)
@@ -507,7 +511,7 @@ class ISensors(Sensor, BaseModel):  # pragma: no cover
         table_name = "sensors"
 
 
-class IStimuli(Stimulus, BaseModel):  # pragma: no cover
+class IStimuli(Stimulus, IBaseModel):  # pragma: no cover
     analog = IntegerField(constraints=[SQL("DEFAULT 0")])
     audio_file = ForeignKeyField(
         column_name="audio_file_id", field="id", model=IAudioFiles, null=True, unique=True
@@ -528,7 +532,7 @@ class IStimuli(Stimulus, BaseModel):  # pragma: no cover
         table_name = "stimuli"
 
 
-class ICompoundLabels(CompoundLabel, BaseModel):  # pragma: no cover
+class ICompoundLabels(CompoundLabel, IBaseModel):  # pragma: no cover
     compound = ForeignKeyField(column_name="compound_id", field="id", model=ICompounds)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     name = CharField()
@@ -538,7 +542,7 @@ class ICompoundLabels(CompoundLabel, BaseModel):  # pragma: no cover
         table_name = "compound_labels"
 
 
-class IFeatures(Feature, BaseModel):  # pragma: no cover
+class IFeatures(Feature, IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     data_type = EnumField(
         choices=(
@@ -568,7 +572,7 @@ class IFeatures(Feature, BaseModel):  # pragma: no cover
         table_name = "features"
 
 
-class IRois(BaseModel):  # pragma: no cover
+class IRois(IBaseModel):  # pragma: no cover
     ref = ForeignKeyField(column_name="ref_id", field="id", model=IRefs)
     well = ForeignKeyField(column_name="well_id", field="id", model=IWells)
     x0 = IntegerField()
@@ -585,7 +589,7 @@ class IRois(BaseModel):  # pragma: no cover
         table_name = "rois"
 
 
-class IRunTags(BaseModel):  # pragma: no cover
+class IRunTags(IBaseModel):  # pragma: no cover
     name = CharField()
     run = ForeignKeyField(column_name="run_id", field="id", model=IRuns)
     value = CharField()
@@ -595,10 +599,12 @@ class IRunTags(BaseModel):  # pragma: no cover
         indexes = ((("run", "name"), True),)
 
 
-class ISauronSettings(BaseModel):  # pragma: no cover
+class ISauronSettings(IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     name = CharField(index=True)
-    sauron_config = ForeignKeyField(column_name="sauron_config_id", field="id", model=ISauronConfigs)
+    sauron_config = ForeignKeyField(
+        column_name="sauron_config_id", field="id", model=ISauronConfigs
+    )
     value = CharField()
 
     class Meta:
@@ -606,7 +612,7 @@ class ISauronSettings(BaseModel):  # pragma: no cover
         indexes = ((("sauron_config", "name"), True),)
 
 
-class ISensorData(BaseModel):  # pragma: no cover
+class ISensorData(IBaseModel):  # pragma: no cover
     floats = BlobField()  # auto-corrected to BlobField
     floats_sha1 = BlobField(index=True)  # auto-corrected to BlobField
     run = ForeignKeyField(column_name="run_id", field="id", model=IRuns)
@@ -616,7 +622,7 @@ class ISensorData(BaseModel):  # pragma: no cover
         table_name = "sensor_data"
 
 
-class IStimulusFrames(BaseModel):  # pragma: no cover
+class IStimulusFrames(IBaseModel):  # pragma: no cover
     assay = ForeignKeyField(column_name="assay_id", field="id", model=IAssays)
     frames = BlobField()  # auto-corrected to BlobField
     frames_sha1 = BlobField(index=True)  # auto-corrected to BlobField
@@ -627,7 +633,7 @@ class IStimulusFrames(BaseModel):  # pragma: no cover
         indexes = ((("assay", "stimulus"), True),)
 
 
-class ISubmissionParams(BaseModel):  # pragma: no cover
+class ISubmissionParams(IBaseModel):  # pragma: no cover
     name = CharField()
     param_type = EnumField(
         choices=("n_fish", "compound", "dose", "variant", "dpf", "group")
@@ -640,7 +646,7 @@ class ISubmissionParams(BaseModel):  # pragma: no cover
         indexes = ((("submission", "name"), True),)
 
 
-class ISubmissionRecords(BaseModel):  # pragma: no cover
+class ISubmissionRecords(IBaseModel):  # pragma: no cover
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])
     datetime_modified = DateTimeField()
     sauron = ForeignKeyField(column_name="sauron_id", field="id", model=ISaurons)
@@ -652,7 +658,7 @@ class ISubmissionRecords(BaseModel):  # pragma: no cover
         indexes = ((("submission", "status", "datetime_modified"), True),)
 
 
-class IWellFeatures(BaseModel):  # pragma: no cover
+class IWellFeatures(IBaseModel):  # pragma: no cover
     floats = BlobField()  # auto-corrected to BlobField
     sha1 = BlobField(index=True)  # auto-corrected to BlobField
     type = ForeignKeyField(column_name="type_id", field="id", model=IFeatures)
@@ -662,7 +668,7 @@ class IWellFeatures(BaseModel):  # pragma: no cover
         table_name = "well_features"
 
 
-class IWellTreatments(BaseModel):  # pragma: no cover
+class IWellTreatments(IBaseModel):  # pragma: no cover
     batch = ForeignKeyField(column_name="batch_id", field="id", model=IBatches)
     micromolar_dose = FloatField(null=True)
     well = ForeignKeyField(column_name="well_id", field="id", model=IWells)
@@ -672,7 +678,7 @@ class IWellTreatments(BaseModel):  # pragma: no cover
         indexes = ((("well", "batch"), True),)
 
 
-class IBatchAnnotations(BaseModel):  # pragma: no cover
+class IBatchAnnotations(IBaseModel):  # pragma: no cover
     annotator = ForeignKeyField(column_name="annotator_id", field="id", model=IUsers)
     batch = ForeignKeyField(column_name="batch_id", field="id", model=IBatches, null=False)
     created = DateTimeField(constraints=[SQL("DEFAULT current_timestamp()")])

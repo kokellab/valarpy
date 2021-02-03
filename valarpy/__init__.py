@@ -91,7 +91,7 @@ def valarpy_info() -> Generator[str, None, None]:
         yield ""
         yield "Table                       N Rows"
         yield "----------------------------------"
-        for sub in m.BaseModel.__subclasses__():
+        for sub in m.IBaseModel.__subclasses__():
             count = sub.select(peewee.fn.COUNT(sub.id).alias("count")).first()
             yield f"{sub.__name__:<25} = {count.count}"
         yield "----------------------------------"

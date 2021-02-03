@@ -14,6 +14,10 @@ class _ABC:
     """
 
 
+class MetaModel(_ABC):
+    """"""
+
+
 class BlobType(_enum.Enum):
     int_sbyte = _enum.auto()
     int_ubyte = _enum.auto()
@@ -76,7 +80,14 @@ class BlobType(_enum.Enum):
             # this is a dangerous use, so let's be explicit
             # an alternative is to also define an `is_unsigned`
             raise ValueError(f"Can't determine whether {self.name} is signed or unsigned")
-        return self in {BlobType.sbyte, BlobType.sshort, BlobType.sint, BlobType.slong, BlobType.sfloat, BlobType.sdouble}
+        return self in {
+            BlobType.sbyte,
+            BlobType.sshort,
+            BlobType.sint,
+            BlobType.slong,
+            BlobType.sfloat,
+            BlobType.sdouble,
+        }
 
 
 class SensorType(_enum.Enum):
@@ -107,7 +118,7 @@ class AnnotationLevel(_enum.Enum):
         # if we put it as 1.5, then it would often get counted by mistake
         # because 1:note is a good cutoff for "bad from now on"
         # noinspection PyTypeChecker
-        fixmap = {e: 0.5 if e==AnnotationLevel.fixed else e.value for e in self}
+        fixmap = {e: 0.5 if e == AnnotationLevel.fixed else e.value for e in self}
         return fixmap[self] < fixmap[other]
 
     @property
@@ -181,18 +192,18 @@ class _DescribedRow(_TimestampedRow, _ABC):
 class Supplier(_DescribedRow, _ABC):
     pass
 
+
 class Ref(_DescribedRow, _ABC):
     pass
 
-class Sauron(_DescribedRow, _ABC):
 
+class Sauron(_DescribedRow, _ABC):
     @property
     def is_active(self) -> bool:
         return getattr(self, "is_active")
 
 
 class SauronConfig(_TimestampedRow, _ABC):
-
     @property
     def sauron(self) -> Sauron:
         return getattr(self, "sauron")
@@ -207,9 +218,7 @@ class SauronConfig(_TimestampedRow, _ABC):
 
 
 class ProjectType(_DescribedRow, _ABC):
-    """
-
-    """
+    """"""
 
 
 class Project(_DescribedRow, _ABC):
@@ -275,7 +284,6 @@ class User(Row, _ABC):
 
 
 class PlateType(Row, _ABC):
-
     @property
     def n_rows(self) -> int:
         return getattr(self, "n_rows")
@@ -296,7 +304,6 @@ class Plate(_TimestampedRow, _ABC):
 
 
 class Submission(_TimestampedRow, _ABC):
-
     @property
     def datetime_dosed(self) -> _Optional[_datetime]:
         return getattr(self, "datetime_dosed")
@@ -307,7 +314,6 @@ class Submission(_TimestampedRow, _ABC):
 
 
 class Run(_DescribedRow, _ABC):
-
     @property
     def tag(self) -> str:
         return getattr(self, "tag")
@@ -350,7 +356,6 @@ class Run(_DescribedRow, _ABC):
 
 
 class ConfigFile(_TimestampedRow, _ABC):
-
     @property
     def text(self) -> int:
         return getattr(self, "text")
@@ -361,7 +366,6 @@ class ConfigFile(_TimestampedRow, _ABC):
 
 
 class ControlType(Row, _ABC):
-
     @property
     def positive(self) -> bool:
         return getattr(self, "positive")
@@ -376,7 +380,6 @@ class ControlType(Row, _ABC):
 
 
 class GeneticVariant(_DescribedRow, _ABC):
-
     @property
     def creator(self) -> User:
         return getattr(self, "creator")
@@ -387,7 +390,6 @@ class GeneticVariant(_DescribedRow, _ABC):
 
 
 class Well(Row, _ABC):
-
     @property
     def index(self) -> int:
         return self.well_index
@@ -426,7 +428,6 @@ class Well(Row, _ABC):
 
 
 class Compound(_TimestampedRow, _ABC):
-
     @property
     def inchi(self) -> _Optional[str]:
         return getattr(self, "inchi")
@@ -461,15 +462,12 @@ class Compound(_TimestampedRow, _ABC):
 
 
 class Location(_DescribedRow, _ABC):
-
     @property
     def is_temporary(self) -> bool:
         return getattr(self, "is_temporary")
 
 
-
 class Batch(_DescribedRow, _ABC):
-
     @property
     def lookup_hash(self) -> str:
         return getattr(self, "lookup_hash")
@@ -536,7 +534,6 @@ class Batch(_DescribedRow, _ABC):
 
 
 class Battery(_DescribedRow, _ABC):
-
     @property
     def length(self) -> int:
         return getattr(self, "length")
@@ -551,14 +548,12 @@ class Battery(_DescribedRow, _ABC):
 
 
 class Assay(_DescribedRow, _ABC):
-
     @property
     def length(self) -> int:
         return getattr(self, "length")
 
 
 class AssayPosition(Row, _ABC):
-
     @property
     def assay(self) -> Assay:
         return getattr(self, "assay")
@@ -573,7 +568,6 @@ class AssayPosition(Row, _ABC):
 
 
 class Stimulus(_DescribedRow, _ABC):
-
     @property
     def default_color(self) -> str:
         return getattr(self, "default_color")
@@ -584,7 +578,6 @@ class Stimulus(_DescribedRow, _ABC):
 
 
 class AudioFile(_TimestampedRow, _ABC):
-
     @property
     def filename(self) -> str:
         return getattr(self, "filename")
@@ -599,14 +592,12 @@ class AudioFile(_TimestampedRow, _ABC):
 
 
 class ExperimentTag(_NameValueRow, _ABC):
-
     @property
     def experiment(self) -> str:
         return getattr(self, "experiment")
 
 
 class RunAnnotation(_NameValueRow, _ABC):
-
     @property
     def annotator(self) -> User:
         return getattr(self, "annotator")
@@ -629,14 +620,12 @@ class RunAnnotation(_NameValueRow, _ABC):
 
 
 class RunTag(_NameValueRow, _ABC):
-
     @property
     def run(self) -> Run:
         return getattr(self, "run")
 
 
 class Roi(Row, _ABC):
-
     @property
     def well(self) -> Well:
         return getattr(self, "well")
@@ -663,7 +652,6 @@ class Roi(Row, _ABC):
 
 
 class Sensor(_DescribedRow, _ABC):
-
     @property
     def sensor_type(self) -> SensorType:
         return getattr(self, "sensor_type")
@@ -674,7 +662,6 @@ class Sensor(_DescribedRow, _ABC):
 
 
 class Feature(_DescribedRow, _ABC):
-
     @property
     def is_time_dependent(self) -> BlobType:
         return getattr(self, "is_time_dependent")
@@ -688,7 +675,6 @@ class Feature(_DescribedRow, _ABC):
 
 
 class WellTreatment(Row, _ABC):
-
     @property
     def well(self) -> Well:
         return getattr(self, "well")
@@ -703,7 +689,6 @@ class WellTreatment(Row, _ABC):
 
 
 class WellFeature(Row, _ABC):
-
     @property
     def feature(self) -> Feature:
         return getattr(self, "feature")
@@ -714,7 +699,6 @@ class WellFeature(Row, _ABC):
 
 
 class BatchAnnotation(_NameValueRow, _ABC):
-
     @property
     def level(self) -> AnnotationLevel:
         return getattr(self, "level")
@@ -729,7 +713,6 @@ class BatchAnnotation(_NameValueRow, _ABC):
 
 
 class CompoundLabel(Row, _ABC):
-
     @property
     def compound(self) -> Compound:
         return getattr(self, "compound")
@@ -744,7 +727,6 @@ class CompoundLabel(Row, _ABC):
 
 
 class BatchLabel(Row, _ABC):
-
     @property
     def batch(self) -> Compound:
         return getattr(self, "batch")

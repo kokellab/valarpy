@@ -1,6 +1,19 @@
 from collections import defaultdict
 from numbers import Integral
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Union,
+    Generic,
+    TypeVar,
+    Type,
+)
 
 import pandas as pd
 import peewee
@@ -77,7 +90,10 @@ class TableDescriptionFrame(pd.DataFrame):
     pass
 
 
-class BaseModel(Model):
+_T = TypeVar("_T", bound=Model, covariant=True)
+
+
+class IBaseModel(Model, Generic[_T]):
     """
     A table model in Valar through Valarpy and peewee.
     Provides functions in additional to the normal peewee functions.
@@ -117,7 +133,7 @@ class BaseModel(Model):
         return self.__data__
 
     @classmethod
-    def get_desc_list(cls) -> List[Dict[str, str]]:
+    def get_desc_list(cls) -> Sequence[Mapping[str, str]]:
         """
         Gets info about the columns as a list of dicts.
 
@@ -227,8 +243,8 @@ class BaseModel(Model):
 
     @classmethod
     def fetch_or_none(
-        cls, thing: Union[Integral, str, peewee.Model], like: bool = False, regex: bool = False
-    ) -> Optional[peewee.Model]:
+        cls, thing: Union[Integral, str, _T], like: bool = False, regex: bool = False
+    ) -> Optional[_T]:
         """
         Gets the first (which is unique) match of the row by:
             - instance of this class (just returns it)
@@ -273,9 +289,7 @@ class BaseModel(Model):
             )
 
     @classmethod
-    def fetch(
-        cls, thing: Union[Integral, str, peewee.Model], like: bool = False, regex: bool = False
-    ) -> peewee.Model:
+    def fetch(cls, thing: Union[Integral, str, _T], like: bool = False, regex: bool = False) -> _T:
         """
         Gets the first (which is unique) match of the row by:
             - instance of this class (just returns it)
@@ -310,9 +324,7 @@ class BaseModel(Model):
         return found
 
     @classmethod
-    def fetch_all(
-        cls, things: Iterable[Union[Integral, str, peewee.Model]]
-    ) -> Sequence[peewee.Model]:
+    def fetch_all(cls, things: Iterable[Union[Integral, str, _T]]) -> Sequence[_T]:
         """
         Fetches rows corresponding to ``things`` from their instances, IDs, or values from unique columns.
         See ``fetch`` for full information.
@@ -347,9 +359,9 @@ class BaseModel(Model):
     @classmethod
     def fetch_all_or_none(
         cls,
-        things: Iterable[Union[Integral, str, peewee.Model]],
+        things: Iterable[Union[Integral, str, _T]],
         join_fn: Optional[Callable[[peewee.Expression], peewee.Expression]] = None,
-    ) -> Iterable[peewee.Model]:
+    ) -> Iterable[_T]:
         """
         Fetches rows corresponding to ``things`` from their instances, IDs, or values from unique columns.
         See ``fetch`` for full information.
@@ -439,10 +451,10 @@ class BaseModel(Model):
         thing: Union[
             Integral,
             str,
-            peewee.Model,
+            _T,
             peewee.Expression,
             Sequence[peewee.Expression],
-            Sequence[Union[Integral, str, peewee.Model]],
+            Sequence[Union[Integral, str, _T]],
         ],
     ) -> Sequence[peewee.Expression]:
         """
