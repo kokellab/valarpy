@@ -1,16 +1,19 @@
 import json
 import logging
 import os
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Mapping, Union, Generator
 
 import peewee
+from peewee import _transaction as PeeweeTransaction
 
 logger = logging.getLogger("valarpy")
 
 
 class GlobalConnection:  # pragma: no cover
-    peewee_database = None
+    peewee_database: peewee.Database = None
+    write_enabled: bool = False
 
 
 class Valar:
@@ -61,6 +64,23 @@ class Valar:
         self._config: Dict[str, Union[str, int]] = config
         self._db_name = self._config.pop("database")
 
+    def enable_write(self) -> None:
+        """
+        Enables running UPDATEs, INSERTs, and DELETEs.
+        Otherwise, attempting will raise a ``WriteNotEnabledError``.
+        The database user must additionally have the appropriate privileges.
+        Note that this function is **not thread-safe.**
+        """
+        GlobalConnection.write_enabled = True
+
+    def disable_write(self) -> None:
+        """
+        Disables running UPDATEs, INSERTs, and DELETEs.
+        See ``enable_write``.
+        Note that this function is **not thread-safe.**
+        """
+        GlobalConnection.write_enabled = False
+
     @classmethod
     def find_extant_path(cls, *paths: Union[Path, str, None]) -> Path:
         """
@@ -95,11 +115,58 @@ class Valar:
         """
         return [
             os.environ.get("VALARPY_CONFIG"),
-            Path.home() / ".chemfish" / "connection.json",
+            Path.home() / ".sauronlab" / "connection.json",
             Path.home() / ".valarpy" / "connection.json",
             Path.home() / ".valarpy" / "config.json",
             Path.home() / ".valarpy" / "read_only.json",
         ]
+
+    @contextmanager
+    def rolling_back(self) -> Generator[PeeweeTransaction, None, None]:
+        """
+        Starts a transaction or savepoint that will be rolled back whether it fails or succeeds.
+        Useful for testing.
+
+        Yields:
+            A peewee Transaction type; this should generally not be used
+        """
+        # noinspection PyBroadException
+        with self._db.atomic() as t:
+            try:
+                yield t
+            except BaseException:
+                logger.debug("Failed on transaction. Rolling back.")
+                raise
+            finally:
+                logger.debug("Succeeded on transaction. Rolling back.")
+                t.rollback()
+
+    @contextmanager
+    def atomic(self) -> Generator[PeeweeTransaction, None, None]:
+        """
+        Starts a transaction or savepoint that will be rolled back only on failure.
+
+        Yields:
+            A peewee Transaction type; this should generally not be used
+        """
+        # noinspection PyBroadException
+        with self._db.atomic() as t:
+            try:
+                yield t
+            except BaseException:
+                logger.debug("Failed on atomic transaction. Rolling back.")
+                raise
+
+    @property
+    def _db(self) -> peewee.Database:
+        """
+        The underlying database.
+        You should generally not access this directly.
+
+        Returns:
+            A peewee ``Database`` instance
+        """
+        return GlobalConnection.peewee_database
 
     def reconnect(self) -> None:
         """
@@ -115,7 +182,9 @@ class Valar:
         This is already called by ``__enter__``.
         """
         logging.info(f"Opening connection to {self._db_name}")
-        GlobalConnection.peewee_database = peewee.MySQLDatabase(self._db_name, **self._config)
+        GlobalConnection.peewee_database = peewee.MySQLDatabase(
+            self._db_name, autorollback=True, **self._config
+        )
         GlobalConnection.peewee_database.connect()
 
     def close(self) -> None:

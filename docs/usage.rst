@@ -1,0 +1,79 @@
+Usage
+=====
+
+
+Valarpy is an ORM for Valar based on `Peewee <https://github.com/coleifer/peewee>`_.
+Here is how to initiate a new (read-only) connection.
+
+.. code-block::
+
+    import valarpy
+    with valarpy.opened() as model:
+        print(list(model.Refs.select()))
+
+
+Note that valarpy is mostly thread-safe but uses a single database connection
+and write-ability state that is not thread-safe.
+
+
+Write access
+--------------
+
+If your database username provides privileges for ``INSERT``, ``UPDATE``, or ``DELETE``,
+you can run those queries via valarpy.
+Because the vast majority of access does not require modifying the database –
+and mistakes can be catastrophic and require reloading from a nightly backup –
+you must call ``enable_write()`` for some added safety. (Run ``disable_write()`` when finished.)
+
+You should use `trasactions <https://mariadb.com/kb/en/start-transaction/>`_
+and/or `savepoints <https://mariadb.com/kb/en/savepoint/>`_.
+In the following code, an atomic transaction is started, and the transaction is committed
+when the context manager closes. If an exception is raised within the transaction block,
+it will be automatically rolled back on exit.
+
+.. code-block::
+
+    import valarpy
+    with valarpy.opened() as model:
+        # enable write access
+        model.enable_write()
+        with model.atomic():
+            ref = Refs.fetch(1)
+            ref.name = "modified-name"
+            ref.save()
+        # transaction is now committed
+
+If you nest ``atomic()`` calls, the nested call(s) will create savepoints rather than initiate new transactions.
+If a transaction fails in the nested block, it will be rolled back to the savepoint:
+
+.. code-block::
+
+    import valarpy
+    with valarpy.opened() as model:
+        # enable write access
+        model.enable_write()
+        # This starts a transaction:
+        with model.atomic():
+            ref = Refs.fetch(1)
+            ref.name = "improved-name"
+            ref.version = "version 2"
+            try:
+                # This just creates a savepoint
+                with model.atomic():
+                    ref.name = "name modified again"
+                    ref.save()
+                    raise ValueError("Fail!")
+                # savepoint exits
+            except:
+                print("Rolling back to checkpoint")
+                # prints "name=improved-name, version="version 2"
+                print(f"name={ref.name}, version={ref.version}")
+        # transaction is now committed
+
+You would never nest ``atomic`` calls in a single function, but you might call a function that also
+calls ``atomic``.
+There is a method analogous to ``atomic`` called ``rolling_back``. This will roll back to the transaction
+or savepoint when the block closes, whether or not an exception was called. This is especially useful when
+writing tests.
+Finally, ``model.atomic()`` and ``model.rolling_back()`` both yield a Transaction object that has several methods,
+including ``.commit()`` and ``.rollback()``. In general, you would not want to call these directly, but you can.

@@ -16,9 +16,9 @@ from valarpy.connection import Valar as __Valar
 
 pkg = Path(__file__).absolute().parent.name
 logger = logging.getLogger(pkg)
-__metadata = None
+_metadata = None
 try:
-    __metadata = __load(Path(__file__).absolute().parent.name)
+    _metadata = __load(Path(__file__).absolute().parent.name)
     __status__ = "Development"
     __copyright__ = "Copyright 2016–2021"
     __date__ = "2020-12-29"
@@ -96,8 +96,8 @@ def valarpy_info() -> Generator[str, None, None]:
     Raises:
         InterfaceError: On some connection and schema mismatch errors
     """
-    if __metadata is not None:
-        yield "{} (v{})".format(__metadata["name"], __metadata["version"])
+    if _metadata is not None:
+        yield "{} (v{})".format(_metadata["name"], _metadata["version"])
     else:
         yield "Unknown project info"
     yield "Connecting..."

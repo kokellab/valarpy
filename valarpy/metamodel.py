@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from numbers import Integral
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Union
@@ -20,6 +21,18 @@ class ValarLookupError(KeyError):
 class ValarTableTypeError(TypeError):
     """
     A function was passed a row of a table, but from the wrong table.
+    """
+
+
+class UnsupportedOperationError(Exception):
+    """
+    This database operation is not supported.
+    """
+
+
+class WriteNotEnabledError(Exception):
+    """
+    Write access has not been enabled.
     """
 
 
@@ -85,6 +98,96 @@ class BaseModel(Model):
 
     class Meta:
         database = database
+
+    def save(self, force_insert=False, only=None) -> Union[bool, int]:
+        self._ensure_write()
+        return super().save(force_insert=force_insert, only=only)
+
+    def delete_instance(self, recursive=False, delete_nullable=False) -> Any:
+        self._ensure_write()
+        return super().delete_instance(recursive=recursive, delete_nullable=delete_nullable)
+
+    @classmethod
+    def update(cls, __data=None, **update) -> peewee.ModelUpdate:
+        cls._ensure_write()
+        return super().update(__data=__data, **update)
+
+    @classmethod
+    def insert(cls, __data=None, **insert) -> peewee.ModelInsert:
+        cls._ensure_write()
+        return super().insert(__data=__data, **insert)
+
+    @classmethod
+    def insert_many(cls, rows, fields=None) -> peewee.ModelInsert:
+        cls._ensure_write()
+        return super().insert_many(rows=rows, fields=fields)
+
+    @classmethod
+    def insert_from(cls, query, fields) -> peewee.ModelInsert:
+        cls._ensure_write()
+        return super().insert_from(query=query, fields=fields)
+
+    @classmethod
+    def replace(cls, __data=None, **insert) -> Optional[Any]:
+        cls._ensure_write()
+        return super().replace(__data=__data, **insert)
+
+    @classmethod
+    def replace_many(cls, rows, fields=None) -> Optional[Any]:
+        cls._ensure_write()
+        return super().replace_many(rows=rows, fields=fields)
+
+    @classmethod
+    def raw(cls, rows, fields=None) -> Optional[Any]:
+        raise UnsupportedOperationError(f"Cannot get raw {cls}: not supported")
+
+    @classmethod
+    def delete(cls) -> peewee.ModelDelete:
+        cls._ensure_write()
+        return super().delete()
+
+    @classmethod
+    def create(cls, **query) -> BaseModel:
+        cls._ensure_write()
+        return super().create(**query)
+
+    @classmethod
+    def bulk_create(cls, model_list, batch_size=None) -> Optional[Any]:
+        cls._ensure_write()
+        return super().bulk_create(model_list=model_list, batch_size=batch_size)
+
+    @classmethod
+    def bulk_update(cls, model_list, fields, batch_size=None) -> int:
+        cls._ensure_write()
+        return super().bulk_update(model_list=model_list, fields=fields, batch_size=batch_size)
+
+    @classmethod
+    def set_by_id(cls, key, value) -> Any:
+        cls._ensure_write()
+        return super().set_by_id(key, value)
+
+    @classmethod
+    def delete_by_id(cls, pk) -> Any:
+        cls._ensure_write()
+        return super().delete_by_id(pk)
+
+    @classmethod
+    def get_or_create(cls, **kwargs) -> BaseModel:
+        cls._ensure_write()
+        return super().get_or_create(**kwargs)
+
+    @classmethod
+    def drop_table(cls, safe=True, drop_sequences=True, **options) -> None:
+        raise UnsupportedOperationError(f"Cannot drop {cls}: not supported")
+
+    @classmethod
+    def truncate_table(cls, **options) -> None:
+        raise UnsupportedOperationError(f"Cannot truncate {cls}: not supported")
+
+    @classmethod
+    def _ensure_write(cls):
+        if not GlobalConnection.write_enabled:
+            raise WriteNotEnabledError()
 
     def get_data(self) -> Dict[str, Any]:
         """
@@ -318,7 +421,8 @@ class BaseModel(Model):
         See ``fetch`` for full information.
         Also see ``fetch_all_or_none`` for a similar function.
         This method is preferrable to calling ``fetch`` repeatedly because it minimizes the number of queries.
-        Specifically, it will perform 0, 1, or 2 queries depending on the passed types
+        Specifically, it will perform 0, 1, or 2 queries depending on the passed types::
+
             - If only instances are passed, it just returns them (0 queries)
             - If only IDs or only string values are passed, it performs 1 query
             - If both IDs and string values are passed, it performs 2 queries
@@ -355,7 +459,8 @@ class BaseModel(Model):
         See ``fetch`` for full information.
         Also see ``fetch_all`` for a similar function.
         This method is preferrable to calling ``fetch`` repeatedly because it minimizes the number of queries.
-        Specifically, it will perform 0, 1, or 2 queries depending on the passed types
+        Specifically, it will perform 0, 1, or 2 queries depending on the passed types::
+
             - If only instances are passed, it just returns them (0 queries)
             - If only IDs or only string values are passed, it performs 1 query
             - If both IDs and string values are passed, it performs 2 queries
@@ -448,14 +553,16 @@ class BaseModel(Model):
         """
         This method has limited but important reasons for being called.
         See ``fetch``, ``fetch_or_none``, ``fetch_all``, or ``fetch_all_or_none`` for more commonly used functions.
-        Returns a sequence of Peewee expressions corresponding to WHERE statements
+        Returns a sequence of Peewee expressions corresponding to WHERE statements::
+
             - If the instance is one of (int, str, or model), that the row is the one passed,
               matched by ID or unique column value as needed
             - If the instance is a Peewee expression itself, that the expression matches
 
         Args:
             thing: An int-type to be looked up by the ``id`` column, a ``str``.
-                Looked up by:
+                Looked up by::
+
                     - a unique column value
                     - a model instance
                     - an expression
