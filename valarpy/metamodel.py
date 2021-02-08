@@ -7,33 +7,15 @@ import pandas as pd
 import peewee
 from peewee import *
 
+from valarpy import (
+    ValarLookupError,
+    ValarTableTypeError,
+    UnsupportedOperationError,
+    WriteNotEnabledError,
+)
 from valarpy.connection import GlobalConnection
 
 database = GlobalConnection.peewee_database
-
-
-class ValarLookupError(KeyError):
-    """
-    A value wasn't found in Valar.
-    """
-
-
-class ValarTableTypeError(TypeError):
-    """
-    A function was passed a row of a table, but from the wrong table.
-    """
-
-
-class UnsupportedOperationError(Exception):
-    """
-    This database operation is not supported.
-    """
-
-
-class WriteNotEnabledError(Exception):
-    """
-    Write access has not been enabled.
-    """
 
 
 # noinspection PyProtectedMember
@@ -101,41 +83,41 @@ class BaseModel(Model):
 
     def save(self, force_insert=False, only=None) -> Union[bool, int]:
         self._ensure_write()
-        return super().save(force_insert=force_insert, only=only)
+        return super().save(force_insert, only)
 
     def delete_instance(self, recursive=False, delete_nullable=False) -> Any:
         self._ensure_write()
-        return super().delete_instance(recursive=recursive, delete_nullable=delete_nullable)
+        return super().delete_instance(recursive, delete_nullable)
 
     @classmethod
     def update(cls, __data=None, **update) -> peewee.ModelUpdate:
         cls._ensure_write()
-        return super().update(__data=__data, **update)
+        return super().update(__data, **update)
 
     @classmethod
     def insert(cls, __data=None, **insert) -> peewee.ModelInsert:
         cls._ensure_write()
-        return super().insert(__data=__data, **insert)
+        return super().insert(__data, **insert)
 
     @classmethod
     def insert_many(cls, rows, fields=None) -> peewee.ModelInsert:
         cls._ensure_write()
-        return super().insert_many(rows=rows, fields=fields)
+        return super().insert_many(rows, fields)
 
     @classmethod
     def insert_from(cls, query, fields) -> peewee.ModelInsert:
         cls._ensure_write()
-        return super().insert_from(query=query, fields=fields)
+        return super().insert_from(query, fields)
 
     @classmethod
     def replace(cls, __data=None, **insert) -> Optional[Any]:
         cls._ensure_write()
-        return super().replace(__data=__data, **insert)
+        return super().replace(__data, **insert)
 
     @classmethod
     def replace_many(cls, rows, fields=None) -> Optional[Any]:
         cls._ensure_write()
-        return super().replace_many(rows=rows, fields=fields)
+        return super().replace_many(rows, fields)
 
     @classmethod
     def raw(cls, rows, fields=None) -> Optional[Any]:
@@ -154,12 +136,12 @@ class BaseModel(Model):
     @classmethod
     def bulk_create(cls, model_list, batch_size=None) -> Optional[Any]:
         cls._ensure_write()
-        return super().bulk_create(model_list=model_list, batch_size=batch_size)
+        return super().bulk_create(model_list, batch_size)
 
     @classmethod
     def bulk_update(cls, model_list, fields, batch_size=None) -> int:
         cls._ensure_write()
-        return super().bulk_update(model_list=model_list, fields=fields, batch_size=batch_size)
+        return super().bulk_update(model_list, fields, batch_size)
 
     @classmethod
     def set_by_id(cls, key, value) -> Any:
@@ -588,7 +570,8 @@ class BaseModel(Model):
     def _build_or_query(
         cls, values: Sequence[Union[Model, int, str]], like: bool = False, regex: bool = False
     ) -> Optional[peewee.Expression]:  # pragma: no cover
-        assert not (like and regex)
+        if like and regex:
+            raise ValueError(f"Cannot call with both like and regex")
         cols = list(cls.__indexing_cols())
         if len(values) == 0:
             return None
@@ -612,7 +595,8 @@ class BaseModel(Model):
 
     @classmethod
     def __ors_to_query(cls, ors):  # pragma: no cover
-        assert len(ors) > 0
+        if len(ors) == 0:
+            raise AssertionError("Building WHERE on 0 assertions")
         query = ors[0]
         for e in ors[1:]:
             query = query | e

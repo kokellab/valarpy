@@ -22,8 +22,9 @@ There is more documentation available in the Valar readme.
 
 ```python
 import valarpy
-with valarpy.opened() as model:
-    print(list(model.Refs.select()))
+
+with valarpy.for_write() as (valar, model):
+  print(list(model.Refs.select()))
 ```
 
 An example connection config file:

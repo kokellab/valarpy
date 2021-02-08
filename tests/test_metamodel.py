@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from valarpy import *
+from valarpy import Valar
 
 
 @pytest.fixture(scope="module")

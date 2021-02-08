@@ -9,12 +9,14 @@ from typing import Union as __Union
 import peewee
 from peewee import *
 
-from valarpy.metamodel import (
-    BaseModel,
-    EnumField,
-    GlobalConnection,
-    ValarLookupError,
+from valarpy.metamodel import BaseModel, EnumField
+
+# for convenience with prior code
+from valarpy.micromodels import (
     ValarTableTypeError,
+    ValarLookupError,
+    WriteNotEnabledError,
+    UnsupportedOperationError,
 )
 
 

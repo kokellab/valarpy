@@ -12,7 +12,12 @@ from typing import Generator, List, Mapping, Union
 import peewee
 
 from valarpy.connection import Valar as __Valar
-
+from valarpy.micromodels import (
+    ValarLookupError,
+    ValarTableTypeError,
+    UnsupportedOperationError,
+    WriteNotEnabledError,
+)
 
 pkg = Path(__file__).absolute().parent.name
 logger = logging.getLogger(pkg)
@@ -63,7 +68,7 @@ def new_model():
 
 
 @contextmanager
-def opened(
+def for_read(
     config: Union[
         None, str, Path, List[Union[str, Path, None]], Mapping[str, Union[str, int]]
     ] = None
@@ -75,13 +80,37 @@ def opened(
     Args:
         config: Passed to ``Valar.__init__``
 
-    Returns:
+    Yields:
         The ``model`` module
     """
-    with Valar(config):
+    with Valar(config) as valar:
         from valarpy import model
 
         yield model
+
+
+@contextmanager
+def for_write(
+    config: Union[
+        None, str, Path, List[Union[str, Path, None]], Mapping[str, Union[str, int]]
+    ] = None
+):
+    """
+    Context manager. Opens a connection and returns the model.
+    Closes the connection when the generator exits.
+
+    Args:
+        config: Passed to ``Valar.__init__``
+
+    Yields:
+        A tuple of (``Valar``, ``model`` module)
+    """
+    with Valar(config) as valar:
+        from valarpy import model
+
+        valar.enable_write()
+
+        yield valar, model
 
 
 def valarpy_info() -> Generator[str, None, None]:
@@ -101,7 +130,7 @@ def valarpy_info() -> Generator[str, None, None]:
     else:
         yield "Unknown project info"
     yield "Connecting..."
-    with opened(get_preferred_paths()) as m:
+    with for_write(get_preferred_paths()) as m:
         yield "Connected."
         yield ""
         yield "Table                       N Rows"
@@ -119,4 +148,4 @@ if __name__ == "__main__":  # pragma: no cover
         print(line)
 
 
-__all__ = ["Valar", "new_model", "opened", "valarpy_info", "get_preferred_paths"]
+__all__ = ["Valar", "new_model", "for_write", "for_read", "valarpy_info", "get_preferred_paths"]

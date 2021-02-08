@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-from peewee import InterfaceError
 
 import valarpy
 
@@ -14,10 +13,16 @@ class TestModel:
             model = valarpy.new_model()
             assert len(list(model.Refs.select())) == 1
 
-    def test_fancy_open(self):
+    def test_fancy_open_read(self):
         import valarpy
 
-        with valarpy.opened(PATH) as model:
+        with valarpy.for_read(PATH) as model:
+            assert len(list(model.Refs.select())) == 1
+
+    def test_fancy_open_write(self):
+        import valarpy
+
+        with valarpy.for_write(PATH) as (valar, model):
             assert len(list(model.Refs.select())) == 1
 
 

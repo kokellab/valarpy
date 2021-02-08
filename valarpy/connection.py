@@ -61,7 +61,8 @@ class Valar:
             pass
         else:
             raise TypeError(f"Invalid type {type(config)} of {config}")
-        self._config: Dict[str, Union[str, int]] = config
+        # make a copy! Otherwise we'll pop the passed argument, which could cause problems
+        self._config: Dict[str, Union[str, int]] = {k: v for k, v in config.items()}
         self._db_name = self._config.pop("database")
 
     def enable_write(self) -> None:
@@ -131,15 +132,15 @@ class Valar:
             A peewee Transaction type; this should generally not be used
         """
         # noinspection PyBroadException
-        with self._db.atomic() as t:
-            try:
+        try:
+            with self._db.atomic() as t:
                 yield t
-            except BaseException:
-                logger.debug("Failed on transaction. Rolling back.")
-                raise
-            finally:
-                logger.debug("Succeeded on transaction. Rolling back.")
-                t.rollback()
+        except BaseException:
+            logger.debug("Failed on transaction. Rolling back.")
+            raise
+        finally:
+            logger.debug("Succeeded on transaction. Rolling back.")
+            t.rollback()
 
     @contextmanager
     def atomic(self) -> Generator[PeeweeTransaction, None, None]:
@@ -148,6 +149,15 @@ class Valar:
 
         Yields:
             A peewee Transaction type; this should generally not be used
+
+        Examples:
+            Here, both ``testing1`` and ``testing2`` are created atomically in a single transaction,
+            or neither are created on failure because the transaction is automatically rolled back.
+
+                @valar.atomic
+                def create_stuff():
+                    Refs(name="testing1").save()
+                    Refs(name="testing2").save()
         """
         # noinspection PyBroadException
         with self._db.atomic() as t:
@@ -155,6 +165,7 @@ class Valar:
                 yield t
             except BaseException:
                 logger.debug("Failed on atomic transaction. Rolling back.")
+                # t.rollback()
                 raise
 
     @property
@@ -168,13 +179,19 @@ class Valar:
         """
         return GlobalConnection.peewee_database
 
-    def reconnect(self) -> None:
+    def reconnect(self, hard: bool = False) -> None:
         """
         Closes and then opens the connection.
         This may be useful for fixing connection issues.
+
+        Args:
+            hard: Forcibly close and re-open connection
         """
-        self.close()
-        self.open()
+        if hard:
+            self.close()
+            self.open()
+        else:
+            GlobalConnection.peewee_database.connect(reuse_if_open=True)
 
     def open(self) -> None:
         """
@@ -186,6 +203,8 @@ class Valar:
             self._db_name, autorollback=True, **self._config
         )
         GlobalConnection.peewee_database.connect()
+        if self._db.in_transaction():
+            raise AssertionError("In transaction on open() but should not be")
 
     def close(self) -> None:
         """
