@@ -15,7 +15,7 @@ from valarpy import (
 )
 from valarpy.connection import GlobalConnection
 
-database = GlobalConnection.peewee_database
+database = GlobalConnection._peewee_database
 
 
 # noinspection PyProtectedMember
@@ -168,7 +168,7 @@ class BaseModel(Model):
 
     @classmethod
     def _ensure_write(cls):
-        if not GlobalConnection.write_enabled:
+        if not GlobalConnection._write_enabled:
             raise WriteNotEnabledError()
 
     def get_data(self) -> Dict[str, Any]:

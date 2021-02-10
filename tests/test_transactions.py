@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from valarpy import for_read, for_write
+from valarpy import opened, opened
 
 CONFIG_PATH = Path(__file__).parent / "resources" / "connection.json"
 CONFIG_DATA = json.loads(CONFIG_PATH.read_text(encoding="utf8"))
@@ -14,9 +14,9 @@ class TestModel:
     """
 
     def test_atomic_trans(self):
-        with for_write(CONFIG_DATA) as model:
+        with opened(CONFIG_DATA) as model:
             valar = model.conn
-            valar.enable_write()
+            valar.backend.enable_write()
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"myfakeref", "fixedrefname"}).execute()
             assert "myfakeref" not in {r.name for r in Refs.select()}
@@ -26,9 +26,9 @@ class TestModel:
             assert "myfakeref" in {r.name for r in Refs.select()}
 
     def test_rollback_trans(self):
-        with for_write(CONFIG_DATA) as model:
+        with opened(CONFIG_DATA) as model:
             valar = model.conn
-            valar.enable_write()
+            valar.backend.enable_write()
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"myfakeref", "fixedrefname"}).execute()
             assert "myfakeref" not in {r.name for r in Refs.select()}
@@ -38,9 +38,9 @@ class TestModel:
             assert "myfakeref" not in {r.name for r in Refs.select()}
 
     def test_atomic_trans_fail(self):
-        with for_write(CONFIG_DATA) as model:
+        with opened(CONFIG_DATA) as model:
             valar = model.conn
-            valar.enable_write()
+            valar.backend.enable_write()
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"test_atomic_trans_fail"}).execute()
             assert "test_atomic_trans_fail" not in {r.name for r in Refs.select()}
@@ -55,9 +55,9 @@ class TestModel:
             assert "test_atomic_trans_fail" not in {r.name for r in Refs.select()}
 
     def test_atomic_nested(self):
-        with for_write(CONFIG_DATA) as model:
+        with opened(CONFIG_DATA) as model:
             valar = model.conn
-            valar.enable_write()
+            valar.backend.enable_write()
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"myfakeref", "fixedrefname"}).execute()
             with valar.atomic():
@@ -69,7 +69,7 @@ class TestModel:
             assert "fixedrefname" in {r.name for r in Refs.select()}
 
     def test_atomic_nested_fail_on_checkpoint(self):
-        with for_write(CONFIG_DATA) as model:
+        with opened(CONFIG_DATA) as model:
             valar = model.conn
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"myfakeref", "fixedrefname"}).execute()
@@ -82,7 +82,7 @@ class TestModel:
                 except ValueError:
                     pass  # catching outside of savepoint but inside transaction
             # it should have rolled back the savepoint BUT NOT transaction
-        with for_read(CONFIG_DATA):
+        with opened(CONFIG_DATA):
             assert "myfakeref" in {r.name for r in Refs.select()}
             assert "fixedrefname" not in {r.name for r in Refs.select()}
 

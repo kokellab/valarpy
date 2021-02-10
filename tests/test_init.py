@@ -16,13 +16,13 @@ class TestModel:
     def test_fancy_open_read(self):
         import valarpy
 
-        with valarpy.for_read(PATH) as model:
+        with valarpy.opened(PATH) as model:
             assert len(list(model.Refs.select())) == 1
 
     def test_fancy_open_write(self):
         import valarpy
 
-        with valarpy.for_write(PATH) as model:
+        with valarpy.opened(PATH) as model:
             assert len(list(model.Refs.select())) == 1
 
 

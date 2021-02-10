@@ -53,7 +53,7 @@ def new_model():
 
 
 @contextmanager
-def for_read(
+def opened(
     config: Union[
         None, str, Path, List[Union[str, Path, None]], Mapping[str, Union[str, int]]
     ] = None
@@ -66,37 +66,12 @@ def for_read(
         config: Passed to ``Valar.__init__``
 
     Yields:
-        The ``model`` module
+        The ``model`` module, with an attached ``.conn`` of type ``Valar``
     """
     with Valar(config) as valar:
         from valarpy import model
 
         model.conn = valar
-        yield model
-
-
-@contextmanager
-def for_write(
-    config: Union[
-        None, str, Path, List[Union[str, Path, None]], Mapping[str, Union[str, int]]
-    ] = None
-):
-    """
-    Context manager. Opens a connection and returns the model.
-    Closes the connection when the generator exits.
-
-    Args:
-        config: Passed to ``Valar.__init__``
-
-    Yields:
-        A tuple of (``Valar``, ``model`` module)
-    """
-    with Valar(config) as valar:
-        from valarpy import model
-
-        model.conn = valar
-
-        valar.enable_write()
         yield model
 
 
@@ -117,7 +92,7 @@ def valarpy_info() -> Generator[str, None, None]:
     else:
         yield "Unknown project info"
     yield "Connecting..."
-    with for_write(Valar.get_preferred_paths()) as m:
+    with opened(Valar.get_preferred_paths()) as m:
         yield "Connected."
         yield ""
         yield "Table                       N Rows"
@@ -135,4 +110,4 @@ if __name__ == "__main__":  # pragma: no cover
         print(line)
 
 
-__all__ = ["Valar", "new_model", "for_write", "for_read", "valarpy_info"]
+__all__ = ["Valar", "new_model", "opened", "opened", "valarpy_info"]

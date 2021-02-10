@@ -3,7 +3,7 @@ import logging
 import os
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Union, Generator
+from typing import Any, Dict, List, Mapping, Union, Generator, Type
 
 import peewee
 from peewee import _transaction as PeeweeTransaction
@@ -12,8 +12,29 @@ logger = logging.getLogger("valarpy")
 
 
 class GlobalConnection:  # pragma: no cover
-    peewee_database: peewee.Database = None
-    write_enabled: bool = False
+    _peewee_database: peewee.Database = None
+    _write_enabled: bool = False
+
+    @classmethod
+    def enable_write(cls) -> None:
+        """
+        Enables running UPDATEs, INSERTs, and DELETEs.
+        Otherwise, attempting will raise a ``WriteNotEnabledError``.
+        The database user must additionally have the appropriate privileges.
+        Note that this function is **not thread-safe.**
+        """
+        # even though it's a classmethod, refer to the superclass member
+        GlobalConnection._write_enabled = True
+
+    @classmethod
+    def disable_write(cls) -> None:
+        """
+        Disables running UPDATEs, INSERTs, and DELETEs.
+        See ``enable_write``.
+        Note that this function is **not thread-safe.**
+        """
+        # even though it's a classmethod, refer to the superclass member
+        GlobalConnection._write_enabled = False
 
 
 class Valar:
@@ -65,22 +86,9 @@ class Valar:
         self._config: Dict[str, Union[str, int]] = {k: v for k, v in config.items()}
         self._db_name = self._config.pop("database")
 
-    def enable_write(self) -> None:
-        """
-        Enables running UPDATEs, INSERTs, and DELETEs.
-        Otherwise, attempting will raise a ``WriteNotEnabledError``.
-        The database user must additionally have the appropriate privileges.
-        Note that this function is **not thread-safe.**
-        """
-        GlobalConnection.write_enabled = True
-
-    def disable_write(self) -> None:
-        """
-        Disables running UPDATEs, INSERTs, and DELETEs.
-        See ``enable_write``.
-        Note that this function is **not thread-safe.**
-        """
-        GlobalConnection.write_enabled = False
+    @property
+    def backend(self) -> Type[GlobalConnection]:
+        return GlobalConnection
 
     @classmethod
     def find_extant_path(cls, *paths: Union[Path, str, None]) -> Path:
@@ -177,7 +185,7 @@ class Valar:
         Returns:
             A peewee ``Database`` instance
         """
-        return GlobalConnection.peewee_database
+        return GlobalConnection._peewee_database
 
     def reconnect(self, hard: bool = False) -> None:
         """
@@ -191,7 +199,7 @@ class Valar:
             self.close()
             self.open()
         else:
-            GlobalConnection.peewee_database.connect(reuse_if_open=True)
+            GlobalConnection._peewee_database.connect(reuse_if_open=True)
 
     def open(self) -> None:
         """
@@ -199,10 +207,10 @@ class Valar:
         This is already called by ``__enter__``.
         """
         logging.info(f"Opening connection to {self._db_name}")
-        GlobalConnection.peewee_database = peewee.MySQLDatabase(
+        GlobalConnection._peewee_database = peewee.MySQLDatabase(
             self._db_name, autorollback=True, **self._config
         )
-        GlobalConnection.peewee_database.connect()
+        GlobalConnection._peewee_database.connect()
         if self._db.in_transaction():
             raise AssertionError("In transaction on open() but should not be")
 
@@ -212,7 +220,7 @@ class Valar:
         This is already called by ``__exit__``.
         """
         logging.info(f"Closing connection to {self._db_name}")
-        GlobalConnection.peewee_database.close()
+        GlobalConnection._peewee_database.close()
 
     def __enter__(self):
         self.open()

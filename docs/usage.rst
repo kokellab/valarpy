@@ -2,25 +2,15 @@ Usage
 =====
 
 
-Valarpy is an ORM for Valar based on `Peewee <https://github.com/coleifer/peewee>`_.
+Valarpy is an `ORM <https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping>`_
+for Valar based on `Peewee <https://github.com/coleifer/peewee>`_.
 Here is how to initiate a new (read-only) connection.
 
 .. code-block::
 
     import valarpy
-    with valarpy.for_read() as model:
+    with valarpy.opened() as model:
         print(list(model.Refs.select()))
-
-
-Note that valarpy is mostly thread-safe but uses a single database connection
-and write-ability state that is not thread-safe.
-
-.. caution::
-
-    Do not have multiple simultaneous connections open.
-    In particular, this use is expressly not thread-safe.
-    Valarpy provides multiple factories for connections, but
-    you choose one and use it in a singleton in your code.
 
 
 Write access
@@ -30,9 +20,16 @@ If your database username provides privileges for ``INSERT``, ``UPDATE``, or ``D
 you can run those queries via valarpy.
 Because the vast majority of access does not require modifying the database –
 and mistakes can be catastrophic and require reloading from a nightly backup –
-you must call ``for_write()`.
+you must call ``enable_write()``.
 
-You should use `trasactions <https://mariadb.com/kb/en/start-transaction/>`_
+.. warning::
+
+    Although valarpy is mostly thread-safe when using atomic transactions,
+    it uses a global write-access flag.
+    That means that if you call ``enable_write`` (see below), all code can write,
+    even if it called ``valarpy.opened()`` separately.
+
+You should use `transactions <https://mariadb.com/kb/en/start-transaction/>`_
 and/or `savepoints <https://mariadb.com/kb/en/savepoint/>`_.
 In the following code, an atomic transaction is started, and the transaction is committed
 when the context manager closes. If an exception is raised within the transaction block,
@@ -41,7 +38,8 @@ it will be automatically rolled back on exit.
 .. code-block::
 
     import valarpy
-    with valarpy.for_write() as model:
+    with valarpy.opened() as model:
+        model.conn.backend.enable_write()
         with model.atomic():
             ref = Refs.fetch(1)
             ref.name = "modified-name"
@@ -54,9 +52,9 @@ If a transaction fails in the nested block, it will be rolled back to the savepo
 .. code-block::
 
     import valarpy
-    with valarpy.for_write() as model:
+    with valarpy.opened() as model:
         # enable write access
-        model.conn.enable_write()
+        model.conn.backend.enable_write()
         # This starts a transaction:
         with model.conn.atomic():
             ref = Refs.fetch(1)
