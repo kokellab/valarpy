@@ -7,7 +7,7 @@ from valarpy import Valar
 
 @pytest.fixture(scope="module")
 def setup():
-    with Valar.singleton(Path(__file__).parent / "resources" / "connection.json"):
+    with Valar(Path(__file__).parent / "resources" / "connection.json"):
         yield
 
 

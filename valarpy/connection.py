@@ -222,7 +222,11 @@ class Valar:
         self.close()
 
     def __del__(self):  # pragma: no cover
-        self.close()
+        try:
+            self.close()
+        except AttributeError:
+            # Because del gets called at weird times, we might not have a _db_name, etc.
+            logger.debug(f"Error when closing on delete", exc_info=True)
 
     @classmethod
     def _read_json(cls, path: Union[str, Path]) -> Dict[str, Any]:

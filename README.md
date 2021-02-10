@@ -23,7 +23,7 @@ There is more documentation available in the Valar readme.
 ```python
 import valarpy
 
-with valarpy.for_write() as (valar, model):
+with valarpy.for_write() as model:
   print(list(model.Refs.select()))
 ```
 

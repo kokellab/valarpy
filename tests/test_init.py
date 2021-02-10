@@ -22,7 +22,7 @@ class TestModel:
     def test_fancy_open_write(self):
         import valarpy
 
-        with valarpy.for_write(PATH) as (valar, model):
+        with valarpy.for_write(PATH) as model:
             assert len(list(model.Refs.select())) == 1
 
 

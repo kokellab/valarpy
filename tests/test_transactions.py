@@ -14,7 +14,8 @@ class TestModel:
     """
 
     def test_atomic_trans(self):
-        with for_write(CONFIG_DATA) as (valar, model):
+        with for_write(CONFIG_DATA) as model:
+            valar = model.conn
             valar.enable_write()
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"myfakeref", "fixedrefname"}).execute()
@@ -25,7 +26,8 @@ class TestModel:
             assert "myfakeref" in {r.name for r in Refs.select()}
 
     def test_rollback_trans(self):
-        with for_write(CONFIG_DATA) as (valar, model):
+        with for_write(CONFIG_DATA) as model:
+            valar = model.conn
             valar.enable_write()
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"myfakeref", "fixedrefname"}).execute()
@@ -36,7 +38,8 @@ class TestModel:
             assert "myfakeref" not in {r.name for r in Refs.select()}
 
     def test_atomic_trans_fail(self):
-        with for_write(CONFIG_DATA) as (valar, model):
+        with for_write(CONFIG_DATA) as model:
+            valar = model.conn
             valar.enable_write()
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"test_atomic_trans_fail"}).execute()
@@ -52,7 +55,8 @@ class TestModel:
             assert "test_atomic_trans_fail" not in {r.name for r in Refs.select()}
 
     def test_atomic_nested(self):
-        with for_write(CONFIG_DATA) as (valar, model):
+        with for_write(CONFIG_DATA) as model:
+            valar = model.conn
             valar.enable_write()
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"myfakeref", "fixedrefname"}).execute()
@@ -65,8 +69,8 @@ class TestModel:
             assert "fixedrefname" in {r.name for r in Refs.select()}
 
     def test_atomic_nested_fail_on_checkpoint(self):
-        with for_write(CONFIG_DATA) as (valar, model):
-            valar.enable_write()
+        with for_write(CONFIG_DATA) as model:
+            valar = model.conn
             from valarpy.model import Refs
             Refs.delete().where(Refs.name << {"myfakeref", "fixedrefname"}).execute()
             with valar.atomic():

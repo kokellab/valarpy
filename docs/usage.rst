@@ -8,12 +8,19 @@ Here is how to initiate a new (read-only) connection.
 .. code-block::
 
     import valarpy
-    with valarpy.opened() as model:
+    with valarpy.for_read() as model:
         print(list(model.Refs.select()))
 
 
 Note that valarpy is mostly thread-safe but uses a single database connection
 and write-ability state that is not thread-safe.
+
+.. caution::
+
+    Do not have multiple simultaneous connections open.
+    In particular, this use is expressly not thread-safe.
+    Valarpy provides multiple factories for connections, but
+    you choose one and use it in a singleton in your code.
 
 
 Write access
@@ -23,7 +30,7 @@ If your database username provides privileges for ``INSERT``, ``UPDATE``, or ``D
 you can run those queries via valarpy.
 Because the vast majority of access does not require modifying the database –
 and mistakes can be catastrophic and require reloading from a nightly backup –
-you must call ``enable_write()`` for some added safety. (Run ``disable_write()`` when finished.)
+you must call ``for_write()`.
 
 You should use `trasactions <https://mariadb.com/kb/en/start-transaction/>`_
 and/or `savepoints <https://mariadb.com/kb/en/savepoint/>`_.
@@ -34,9 +41,7 @@ it will be automatically rolled back on exit.
 .. code-block::
 
     import valarpy
-    with valarpy.opened() as model:
-        # enable write access
-        model.enable_write()
+    with valarpy.for_write() as model:
         with model.atomic():
             ref = Refs.fetch(1)
             ref.name = "modified-name"
@@ -49,17 +54,17 @@ If a transaction fails in the nested block, it will be rolled back to the savepo
 .. code-block::
 
     import valarpy
-    with valarpy.opened() as model:
+    with valarpy.for_write() as model:
         # enable write access
-        model.enable_write()
+        model.conn.enable_write()
         # This starts a transaction:
-        with model.atomic():
+        with model.conn.atomic():
             ref = Refs.fetch(1)
             ref.name = "improved-name"
             ref.version = "version 2"
             try:
                 # This just creates a savepoint
-                with model.atomic():
+                with model.conn.atomic():
                     ref.name = "name modified again"
                     ref.save()
                     raise ValueError("Fail!")

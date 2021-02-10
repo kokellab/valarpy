@@ -11,7 +11,7 @@ from typing import Generator, List, Mapping, Union
 
 import peewee
 
-from valarpy.connection import Valar as __Valar
+from valarpy.connection import Valar
 from valarpy.micromodels import (
     ValarLookupError,
     ValarTableTypeError,
@@ -37,21 +37,6 @@ try:
     __contact__ = _metadata["maintainer"]
 except PackageNotFoundError:  # pragma: no cover
     logger.error(f"Could not load package metadata for {pkg}. Is it installed?")
-
-
-class Valar(__Valar):
-    @classmethod
-    def singleton(
-        cls,
-        config: Union[
-            None, str, Path, List[Union[str, Path, None]], Mapping[str, Union[str, int]]
-        ] = None,
-    ):
-        z = cls(config)
-        return z
-
-
-get_preferred_paths = Valar.get_preferred_paths
 
 
 def new_model():
@@ -86,6 +71,7 @@ def for_read(
     with Valar(config) as valar:
         from valarpy import model
 
+        model.conn = valar
         yield model
 
 
@@ -108,9 +94,10 @@ def for_write(
     with Valar(config) as valar:
         from valarpy import model
 
-        valar.enable_write()
+        model.conn = valar
 
-        yield valar, model
+        valar.enable_write()
+        yield model
 
 
 def valarpy_info() -> Generator[str, None, None]:
@@ -130,7 +117,7 @@ def valarpy_info() -> Generator[str, None, None]:
     else:
         yield "Unknown project info"
     yield "Connecting..."
-    with for_write(get_preferred_paths()) as m:
+    with for_write(Valar.get_preferred_paths()) as m:
         yield "Connected."
         yield ""
         yield "Table                       N Rows"
@@ -148,4 +135,4 @@ if __name__ == "__main__":  # pragma: no cover
         print(line)
 
 
-__all__ = ["Valar", "new_model", "for_write", "for_read", "valarpy_info", "get_preferred_paths"]
+__all__ = ["Valar", "new_model", "for_write", "for_read", "valarpy_info"]
