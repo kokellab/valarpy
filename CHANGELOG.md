@@ -7,6 +7,9 @@ and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [3.x.0] - unreleased
 
+### Fixed:
+- Bumped some dev deps and improved build
+
 ## [3.0.0] - 2021-02-06
 
 ### Added:

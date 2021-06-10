@@ -1,22 +1,15 @@
 name: Publish on release creation
 on:
   release:
-    types:
-      - published
+    types: ["published"]
   repository_dispatch:
-    types:
-      - release-made
+    types: ["release-made"]
 jobs:
   deploy:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: read action options
-        id: read_options
-        run: |
-          json=`cat .github/action-options.json`
-          USE_SLACK=`echo $(jq -r '.use_slack' <<< "$json")`
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -27,7 +20,7 @@ jobs:
       - name: Build sdists and wheels with Poetry
         run: |
           poetry build
-      - name: Attach artifacts to the Github release
+      - name: Attach artifacts to the GitHub release
         uses: skx/github-action-publish-binaries@master
         with:
           args: "dist/*"
